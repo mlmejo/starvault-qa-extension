@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>StarVault Event Inspector</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <header class="bar">
+    <div class="identity" id="identity">Waiting for StarVault events on this tab…</div>
+    <div class="actions">
+      <button id="flush" title="Send the SDK's buffered events now instead of waiting up to 30s">Flush now</button>
+      <label class="toggle" title="Call StarvaultTracking.flush() every second on this tab"><input type="checkbox" id="autoflush"> Auto-flush</label>
+      <button id="export" title="Download this tab's captured events as JSON">Export</button>
+      <button id="clear">Clear</button>
+    </div>
+    <div class="filters">
+      <input id="search" type="search" placeholder="Filter event, element, path, property…">
+      <select id="point"><option value="">All D-points</option></select>
+      <select id="show">
+        <option value="all">All events</option>
+        <option value="points">D-point events only</option>
+        <option value="issues">Issues only</option>
+      </select>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div class="flash" id="flash" hidden></div>
+  </header>
+
+  <section class="coverage" id="coverage" hidden></section>
+
+  <main id="list"></main>
+
+  <script src="rules.js"></script>
+  <script src="inspect.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>

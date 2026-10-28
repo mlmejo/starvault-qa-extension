@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "StarVault Event Inspector",
+  "version": "0.1.0",
+  "description": "QA tool: shows StarVault tracking events as they leave the browser, labelled by Design Data Point, with data-quality checks.",
+  "permissions": ["webRequest", "storage", "sidePanel", "scripting", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "StarVault Event Inspector"
+  }
+}
