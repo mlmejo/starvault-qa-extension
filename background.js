@@ -158,6 +158,30 @@ chrome.runtime.onMessage.addListener((message, _sender, reply) => {
     return true
   }
 
+  // User uuid from hook.js; session and anonymous ids straight from tracking.js's localStorage.
+  if (message.type === 'identity') {
+    chrome.scripting.executeScript({
+      target: { tabId: message.tabId },
+      world: 'MAIN',
+      func: () => {
+        const read = (key) => { try { return localStorage.getItem(key) } catch { return null } }
+        let session = null
+        try { session = JSON.parse(read('__sv_session') || 'null') } catch { /* corrupt state — no session */ }
+        const hook = window.__svQaIdentity
+        return {
+          hooked: !!hook,
+          host: location.hostname,
+          user_uuid: hook ? hook.user_uuid : null,
+          session_id: (session && session.id) || null,
+          session_touched_at: (session && session.t) || null,
+          anonymous_id: read('__sv_anon'),
+        }
+      },
+    }).then(([result]) => reply({ ok: true, identity: result.result }))
+      .catch((error) => reply({ ok: false, error: error.message }))
+    return true
+  }
+
   if (message.type === 'clear') {
     updateTab(message.tabId, (state) => { state.batches = {}; state.events = [] }).then(() => reply({ ok: true }))
     return true

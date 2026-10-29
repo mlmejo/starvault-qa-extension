@@ -8,6 +8,9 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    { "matches": ["<all_urls>"], "js": ["hook.js"], "run_at": "document_start", "world": "MAIN" }
+  ],
   "side_panel": {
     "default_path": "sidepanel.html"
   },

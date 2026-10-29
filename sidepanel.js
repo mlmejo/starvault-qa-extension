@@ -5,6 +5,7 @@ const $ = (id) => document.getElementById(id)
 const openRows = new Set()
 let tabId = null
 let state = { batches: {}, events: [] }
+let live = null // ids read from the page itself, see refreshIdentity()
 let renderQueued = false
 
 function el(tag, attrs = {}, ...children) {
@@ -61,6 +62,18 @@ async function load() {
   state = stored[key] || { batches: {}, events: [] }
   $('autoflush').checked = !!stored[`auto:${tabId}`]
   openRows.clear()
+  live = null
+  queueRender()
+  refreshIdentity()
+}
+
+// Ids straight from the page, so they show before any event is captured.
+async function refreshIdentity() {
+  const id = tabId
+  if (id == null) return
+  const res = await chrome.runtime.sendMessage({ type: 'identity', tabId: id })
+  if (id !== tabId) return
+  live = res && res.ok ? res.identity : null
   queueRender()
 }
 
@@ -70,6 +83,11 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (!change) return
   state = change.newValue || { batches: {}, events: [] }
   queueRender()
+  refreshIdentity()
+})
+
+chrome.tabs.onUpdated.addListener((id, info) => {
+  if (id === tabId && info.status === 'complete') refreshIdentity()
 })
 
 if (!pinnedTabId) {
@@ -122,16 +140,33 @@ function render() {
   for (const row of visible) list.append(renderRow(row))
 }
 
+const SESSION_TTL_MS = 600000 // tracking.js rotates session_id after this much idle time
+
+// Live page values win over the last captured event, which can be from an earlier page.
+function identity() {
+  const ev = state.events[state.events.length - 1]?.event || {}
+  return {
+    site: ev.site || ev.host || live?.host,
+    user_uuid: live?.hooked ? live.user_uuid : ev.user_uuid,
+    identified: !live?.hooked || !!live.user_uuid,
+    session_id: live?.session_id || ev.session_id,
+    session_expired: !!live?.session_touched_at && Date.now() - live.session_touched_at >= SESSION_TTL_MS,
+    sdk_version: ev.sdk_version,
+  }
+}
+
 function renderIdentity() {
-  const last = state.events[state.events.length - 1]
+  const id = identity()
   const box = $('identity')
-  if (!last) { box.textContent = 'Waiting for StarVault events on this tab…'; return }
-  const ev = last.event
+  $('copy-user').disabled = !id.user_uuid
+  $('copy-session').disabled = !id.session_id
+  if (!id.user_uuid && !id.session_id && !state.events.length) { box.textContent = 'Waiting for StarVault events on this tab…'; return }
   box.replaceChildren(
-    'site ', el('b', { text: ev.site || ev.host || '—' }),
-    ' · user ', el('b', { text: short(ev.user_uuid), title: ev.user_uuid || '' }),
-    ' · session ', el('b', { text: short(ev.session_id), title: ev.session_id || '' }),
-    ' · ', el('b', { text: ev.sdk_version || 'unknown sdk' }),
+    'site ', el('b', { text: id.site || '—' }),
+    ' · user ', el('b', { text: id.identified ? short(id.user_uuid) : 'not identified', title: id.user_uuid || '' }),
+    ' · session ', el('b', { text: short(id.session_id), title: id.session_id || '' }),
+    id.session_expired ? el('span', { class: 'warn', text: ' (idle >10 min, rotates on next event)' }) : null,
+    ' · ', el('b', { text: id.sdk_version || 'unknown sdk' }),
   )
 }
 
@@ -248,6 +283,16 @@ $('autoflush').addEventListener('change', async (e) => {
 $('clear').addEventListener('click', async () => {
   await chrome.runtime.sendMessage({ type: 'clear', tabId })
   openRows.clear()
+})
+
+$('copy-user').addEventListener('click', () => {
+  const { user_uuid } = identity()
+  if (user_uuid) navigator.clipboard.writeText(user_uuid).then(() => flash('User ID copied'))
+})
+
+$('copy-session').addEventListener('click', () => {
+  const { session_id } = identity()
+  if (session_id) navigator.clipboard.writeText(session_id).then(() => flash('Session ID copied'))
 })
 
 $('export').addEventListener('click', () => {
