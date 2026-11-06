@@ -379,7 +379,7 @@ self.SV_RULES = [
       { label: 'Menu avatar impression', match: { event: 'impression_hamburger_user_avatar' }, source: 'browser' },
       { label: 'Menu avatar click', match: { event: 'click_hamburger_user_avatar' }, source: 'browser' },
       { label: 'My Profile nav click', match: { event: 'click_hamburger_nav_item', prop: { item: 'my_profile_nav' } }, source: 'browser' },
-      { label: 'Profile editor view', match: { event: 'pageview', path: '/^\/profile\/edit$/' }, source: 'browser' },
+      { label: 'Profile editor view', match: { event: 'pageview', path: '/^\/(my-)?profile\/edit$/' }, source: 'browser', note: 'WannaHookup uses /profile/edit, NT uses /my-profile/edit. Backend predicate only matches /profile/edit.' },
     ],
   },
 ];
