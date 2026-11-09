@@ -22,9 +22,9 @@ self.SV_RULES = [
       { label: 'Header CTA impression', match: { event: 'impression_header_buy_credits' }, source: 'browser' },
       { label: 'Header CTA click', match: { event: 'click_header_buy_credits' }, props: { 'credits|credit_balance': 'numeric?' }, source: 'browser', note: '`credits` is read with JSONExtractInt (needs a JSON number); `credit_balance` with toInt32OrZero(JSONExtractString).' },
       { label: 'Untagged CTA click', match: { event: 'click', element: '/^buy credits$/i' }, props: { 'credits|credit_balance': 'numeric?' }, source: 'browser' },
-      { label: 'Sales page view', match: { event: 'pageview', path: '/^\/credits\/buy$/' }, source: 'browser' },
+      { label: 'Sales page view', match: { event: 'pageview', path: '/^\/(credits\/)?buy$/' }, source: 'browser', note: '/credits/buy on DatingV2, /buy on NT Dating.' },
       { label: 'Package buy click', match: { event: 'click', element: '/^buy_btn_/' }, source: 'browser' },
-      { label: 'Purchase landing (payment-status with saleID)', match: { event: '*', path: '/payment-status', url: '/[?&]saleID=[^&#]/' }, source: 'browser' },
+      { label: 'Purchase landing (provider return with sale id)', match: { event: '*', path: '/^\/(payment-status|buy\/(verotel|trustpay)\/success)$/', url: '/[?&](saleID|paymentRequestId)=[^&#]/' }, source: 'browser', note: '/payment-status?saleID=, or NT Dating /buy/verotel/success?saleID= and /buy/trustpay/success?paymentRequestId=.' },
     ],
   },
   {
