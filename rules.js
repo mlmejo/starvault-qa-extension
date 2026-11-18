@@ -225,7 +225,7 @@ self.SV_RULES = [
     code: 'D23',
     title: 'Buy Credits page — funnel by entry source & package',
     events: [
-      { label: 'Sales page view', match: { event: 'pageview', path: '/^\/credits\/buy$/' }, source: 'browser', note: 'Entry source comes from the starvault_sales_page_arrivals table, not this event.' },
+      { label: 'Sales page view', match: { event: 'pageview', path: '/^\/(credits\/)?buy$/' }, source: 'browser', note: '/credits/buy on DatingV2, /buy on NT Dating. Entry source comes from the starvault_sales_page_arrivals table, not this event.' },
       { label: 'Package buy click', match: { event: 'click', element: '/^buy_btn_/' }, source: 'browser', note: 'Package key = element_name after buy_btn_.' },
       { label: 'Purchase completed', match: { event: 'purchase_completed' }, props: { transaction_id: 'string', amount: 'numeric', currency: 'string?', plan_name: 'string?' }, source: 'browser', note: 'Needs user_uuid for the entry-source join.' },
     ],
