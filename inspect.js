@@ -110,13 +110,26 @@ function matches(ev, match) {
   return true
 }
 
+// A rule's props adjusted for the event's site. siteProps maps a site to prop
+// overrides; null drops a prop that brand does not have (e.g. NT has no tattoos).
+function propsFor(rule, ev) {
+  const override = rule.siteProps && rule.siteProps[ev.site]
+  if (!override) return rule.props
+  const merged = { ...rule.props }
+  for (const [key, type] of Object.entries(override)) {
+    if (type === null) delete merged[key]
+    else merged[key] = type
+  }
+  return merged
+}
+
 // Every D-point rule this event satisfies, each with its own data-quality issues.
 function designPointHits(ev, rules) {
   const hits = []
   for (const point of rules) {
     for (const rule of point.events || []) {
       if (!matches(ev, rule.match)) continue
-      const issues = propIssues(ev.properties, rule.props)
+      const issues = propIssues(ev.properties, propsFor(rule, ev))
       if (rule.elementType && !TYPE_CHECKS[rule.elementType](ev.element_name)) {
         issues.push({ level: 'error', message: `element_name is ${describe(ev.element_name)} — needs ${TYPE_HINTS[rule.elementType]}` })
       }
